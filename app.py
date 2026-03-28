@@ -8,7 +8,6 @@ import os
 st.set_page_config(page_title="Audio Language Classifier", page_icon="🎧", layout="centered")
 st.title("🎧 Multilingual Audio Classifier")
 st.write("Upload a 5-second audio clip, and the AI will predict if it is English, German, Spanish, or Hindi.")
-st.write("Supported Formats: .wav, .flac, .ogg, or .mp3 .")
 st.markdown("---")
 
 # --- 2. Load the Model Securely ---
