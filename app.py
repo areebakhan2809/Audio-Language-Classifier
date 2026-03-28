@@ -82,16 +82,6 @@ if uploaded_file is not None:
             
             st.bar_chart(prob_df.set_index('Language'))
 
-        with col2:
-            st.markdown("**Acoustic Fingerprint**")
-            # Visualize the 20 MFCC values as a heatmap
-            fig, ax = plt.subplots(figsize=(10, 5))
-            sns.heatmap(features.reshape(-1, 1), annot=True, cmap="magma", cbar=False, ax=ax)
-            ax.set_title("20 MFCC Coefficients")
-            ax.set_xticks([])
-            ax.set_ylabel("Coefficient Index")
-            st.pyplot(fig)
-
         # FINAL RESULT
         st.markdown("---")
         st.subheader(f"🎯 Predicted Language: :green[{prediction.upper()}]")
