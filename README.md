@@ -1,5 +1,3 @@
-# Audio-Language-Classifier
-
 # 🎧 Multilingual Audio Language Classifier
 
 An end-to-end Machine Learning application that identifies the spoken language from a 5-second audio clip. Built with Python, Scikit-Learn, and Streamlit, this project transition from a Google Colab research environment to a live, cloud-hosted production app.
