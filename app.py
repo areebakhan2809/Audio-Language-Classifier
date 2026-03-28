@@ -3,15 +3,22 @@ import librosa
 import numpy as np
 import joblib
 import os
+import tempfile
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 
-# --- 1. UI Configuration ---
+# Page Configuration
 st.set_page_config(page_title="Audio Language Classifier", page_icon="🎧", layout="centered")
+
 st.title("🎧 Multilingual Audio Classifier")
-st.write("Upload a 5-second audio clip, and the AI will predict if it is English, German, Spanish, or Hindi.")
+st.markdown("""
+This AI model identifies the spoken language from a 5-second audio clip.
+**Languages Supported:** English, German, Spanish, Hindi.
+""")
 st.markdown("---")
 
-# --- 2. Load the Model Securely ---
-# @st.cache_resource ensures the model only loads once, keeping the app lightning fast
+# 1. Load the Model (Cached for Speed)
 @st.cache_resource
 def load_model():
     return joblib.load('lang_model.pkl')
@@ -19,47 +26,81 @@ def load_model():
 try:
     model = load_model()
 except Exception as e:
-    st.error("❌ Error: Could not find 'lang_model.pkl'. Please ensure it is in the same folder as this script.")
+    st.error("❌ Error: Could not find 'lang_model.pkl'. Please ensure it is in the repository.")
     st.stop()
 
-# --- 3. The Math Engine (Perfectly matched to Block 2) ---
+# 2. Robust Feature Extraction
 def get_features(file_path):
+    # Load 5 seconds at 16kHz
     y, sr = librosa.load(file_path, sr=16000, duration=5.0)
     
-    # White noise injection & 20 MFCCs to match training data shape
+    # Noise Regularization (Forces model to look at phonetic shapes)
     noise_amplitude = 0.005 * np.random.uniform() * np.amax(y)
     y = y + noise_amplitude * np.random.normal(size=y.shape[0])
-    mfcc_data = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
     
+    # Extract 20 MFCCs
+    mfcc_data = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=20)
     return np.mean(mfcc_data.T, axis=0)
 
-# --- 4. The Frontend Upload Widget ---
-uploaded_file = st.file_uploader("Upload an audio file", type=['wav', 'mp3', 'flac', 'ogg'])
+# 3. UI: File Upload
+uploaded_file = st.file_uploader("📂 Upload a 5-second audio file", type=['wav', 'mp3', 'flac', 'ogg'])
 
 if uploaded_file is not None:
-    # Play the audio back to the user
     st.audio(uploaded_file, format='audio/wav')
     
-    if st.button("Predict Language", type="primary"):
-        with st.spinner("Analyzing phonetic features..."):
-            # Streamlit holds files in RAM. Librosa prefers hard drive paths.
-            # We must write it to a temporary file, process it, and delete it.
-            temp_path = f"temp_{uploaded_file.name}"
-            with open(temp_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
+    if st.button("🚀 Analyze & Predict", type="primary", use_container_width=True):
+        
+        # --- MODEL THINKING: Step-by-Step Logs ---
+        with st.status("Model Activity: Processing Signal...", expanded=True) as status:
+            st.write("📁 Creating temporary data buffer...")
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tfile:
+                tfile.write(uploaded_file.getbuffer())
+                temp_path = tfile.name
             
-            try:
-                # Extract and Predict
-                features = get_features(temp_path).reshape(1, -1)
-                prediction = model.predict(features)[0]
-                
-                # Display the victory
-                st.success(f"🎯 **Predicted Language: {prediction.upper()}**")
-                st.balloons() # Adds a nice presentation flair
-                
-            except Exception as e:
-                st.error(f"Failed to process audio: {e}")
-            finally:
-                # ALWAYS clean up temporary files to prevent hard drive bloat
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+            st.write("✂️ Normalizing temporal duration to 5.0s...")
+            st.write("🔊 Applying White Noise Regularization...")
+            features = get_features(temp_path)
+            
+            st.write("🧠 Feeding MFCC vectors to Random Forest...")
+            prediction = model.predict(features.reshape(1, -1))[0]
+            probabilities = model.predict_proba(features.reshape(1, -1))[0]
+            
+            status.update(label="Analysis Complete!", state="complete", expanded=False)
+
+        # --- THE TECHNICAL DASHBOARD ---
+        st.markdown("### 🔍 Model Diagnostic Insights")
+        
+        col1, col2 = st.columns([1, 1])
+
+        with col1:
+            st.markdown("**Confidence Scores**")
+            # Create a clean dataframe for the bar chart
+            prob_df = pd.DataFrame({
+                'Language': model.classes_,
+                'Probability': probabilities
+            }).sort_values(by='Probability', ascending=False)
+            
+            st.bar_chart(prob_df.set_index('Language'))
+
+        with col2:
+            st.markdown("**Acoustic Fingerprint**")
+            # Visualize the 20 MFCC values as a heatmap
+            fig, ax = plt.subplots(figsize=(10, 5))
+            sns.heatmap(features.reshape(-1, 1), annot=True, cmap="magma", cbar=False, ax=ax)
+            ax.set_title("20 MFCC Coefficients")
+            ax.set_xticks([])
+            ax.set_ylabel("Coefficient Index")
+            st.pyplot(fig)
+
+        # FINAL RESULT
+        st.markdown("---")
+        st.subheader(f"🎯 Predicted Language: :green[{prediction.upper()}]")
+        st.balloons()
+
+        # Cleanup
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+# Footer for B.Tech context
+st.markdown("---")
+st.caption("Developed by Mamu | B.Tech CSE | Nagpur, India")
