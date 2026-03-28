@@ -1,7 +1,8 @@
-numpy
+numpy==1.26.4
 librosa
 scikit-learn
-matplotlib
-seaborn
 joblib
 streamlit
+matplotlib
+seaborn
+pandas
