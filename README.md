@@ -19,7 +19,7 @@ The pipeline relies on `librosa` for audio processing and a `RandomForestClassif
 2.  **White Noise Injection:** A microscopic layer of dynamic static is applied to the raw waveform to mask compression artifacts and force the model to rely on gross phonetic shapes.
 3.  **Dimensionality Reduction:** Extracts exactly 20 MFCCs. Dropping upper bands (21-40) effectively blinds the AI to recording hardware bias and room echoes.
 
-**Performance:** Achieves a robust **74% overall accuracy** on a crowdsourced, multi-speaker dataset, representing true "Language ID" generalization.
+**Performance:** Achieves a robust **75% overall accuracy** on a crowdsourced, multi-speaker dataset, representing true "Language ID" generalization.
 
 ## 📊 The Dataset
 This pipeline utilizes a verified and balanced audio dataset published on Kaggle, engineered to prevent "Voice ID" bias.
