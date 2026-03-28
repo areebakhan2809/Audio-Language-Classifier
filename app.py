@@ -103,4 +103,4 @@ if uploaded_file is not None:
 
 # Footer for B.Tech context
 st.markdown("---")
-st.caption("Developed by Mamu | B.Tech CSE | Nagpur, India")
+st.caption("Developed by Areeba Khan | B.Tech CSE(A)")
